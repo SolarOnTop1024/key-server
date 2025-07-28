@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import json
+import os
 
 app = Flask(__name__)
 
@@ -18,7 +19,6 @@ def validate():
 
     return jsonify({"valid": False})
 
-# Make sure this matches your Render port config
-import os
+# Must use PORT from environment on Render
 port = int(os.environ.get("PORT", 10000))
 app.run(host="0.0.0.0", port=port)
