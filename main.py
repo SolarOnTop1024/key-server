@@ -1,24 +1,32 @@
 from flask import Flask, request, jsonify
 import json
-import os
+import datetime
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return "Solar Key Server is running."
+
 @app.route("/validate")
-def validate():
+def validate_key():
     key = request.args.get("key")
-    user_id = request.args.get("id")
+    uid = request.args.get("id")
 
-    with open("keys.json", "r") as f:
-        data = json.load(f)
+    try:
+        with open("keys.json", "r") as f:
+            keys = json.load(f)
+    except Exception as e:
+        return jsonify({"valid": False, "error": str(e)})
 
-    # Check both key and user ID
-    if user_id in data:
-        record = data[user_id]
-        if record["key"] == key and record["active"]:
-            return jsonify({"valid": True, "expires": record["expires"]})
+    if uid in keys:
+        data = keys[uid]
+        if data["key"] == key and data["active"]:
+            expires = datetime.datetime.strptime(data["expires"], "%Y-%m-%d").date()
+            if datetime.date.today() <= expires:
+                return jsonify({"valid": True})
 
     return jsonify({"valid": False})
 
-port = int(os.environ.get("PORT", 10000))
-app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
