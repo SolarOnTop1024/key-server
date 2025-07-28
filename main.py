@@ -1,30 +1,39 @@
 from flask import Flask, request, jsonify
 import json
 import datetime
+import os
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Solar Key Server is running."
+    return "Key server is up."
 
 @app.route("/validate")
 def validate_key():
     key = request.args.get("key")
     uid = request.args.get("id")
 
-    try:
-        with open("keys.json", "r") as f:
-            keys = json.load(f)
-    except Exception as e:
-        return jsonify({"valid": False, "error": str(e)})
+    if not key or not uid:
+        return jsonify({"valid": False, "error": "Missing key or id"})
 
+    # Load keys
+    if not os.path.exists("keys.json"):
+        return jsonify({"valid": False, "error": "keys.json missing"})
+
+    with open("keys.json", "r") as f:
+        keys = json.load(f)
+
+    # Key validation logic
     if uid in keys:
-        data = keys[uid]
-        if data["key"] == key and data["active"]:
-            expires = datetime.datetime.strptime(data["expires"], "%Y-%m-%d").date()
-            if datetime.date.today() <= expires:
-                return jsonify({"valid": True})
+        entry = keys[uid]
+        if entry["key"] == key and entry["active"]:
+            try:
+                expires = datetime.datetime.strptime(entry["expires"], "%Y-%m-%d").date()
+                if datetime.date.today() <= expires:
+                    return jsonify({"valid": True})
+            except:
+                return jsonify({"valid": False, "error": "Invalid date format"})
 
     return jsonify({"valid": False})
 
