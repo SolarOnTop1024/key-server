@@ -12,13 +12,13 @@ def validate():
     with open("keys.json", "r") as f:
         data = json.load(f)
 
+    # Check both key and user ID
     if user_id in data:
-        entry = data[user_id]
-        if entry["key"] == key and entry["active"]:
-            return jsonify({"valid": True, "expires": entry["expires"]})
+        record = data[user_id]
+        if record["key"] == key and record["active"]:
+            return jsonify({"valid": True, "expires": record["expires"]})
 
     return jsonify({"valid": False})
 
-# Must use PORT from environment on Render
 port = int(os.environ.get("PORT", 10000))
 app.run(host="0.0.0.0", port=port)
